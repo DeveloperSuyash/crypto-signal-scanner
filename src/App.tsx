@@ -240,17 +240,75 @@ export default function App() {
     return () => clearInterval(timer);
   }, [isRunning, scanAllMarkets, settings.refreshIntervalSec]);
 
-  // Add new coin to watchlist
-  const handleAddCoin = (e: FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    const norm = normalizeSymbol(query);
-    if (!watchlist.includes(norm)) {
+  const [isAddingCoin, setIsAddingCoin] = useState(false);
+  const [addCoinError, setAddCoinError] = useState<string | null>(null);
+
+  // Add new coin to watchlist with instant Binance verification
+  const handleAddCoin = async (e?: FormEvent, coinSymbolToQuickAdd?: string) => {
+    if (e) e.preventDefault();
+    const targetQuery = coinSymbolToQuickAdd || query;
+    if (!targetQuery.trim()) return;
+
+    const norm = normalizeSymbol(targetQuery);
+    setAddCoinError(null);
+
+    if (watchlist.includes(norm)) {
+      setSelectedSymbol(norm);
+      setQuery('');
+      return;
+    }
+
+    setIsAddingCoin(true);
+
+    try {
+      // 1. Instantly verify and fetch candles for the new coin
+      const [candles, ticker] = await Promise.all([
+        fetchBinanceKlines(norm, settings.interval, settings.marketType, 260),
+        fetchBinanceTicker24h(norm, settings.marketType),
+      ]);
+
+      if (!candles || candles.length < 20) {
+        throw new Error(`Insufficient data for ${norm}`);
+      }
+
+      const ruleA = calculateRuleA(candles, settings);
+      const ruleB = calculateRuleB(candles, settings);
+      const combinedSignal = evaluateCombinedSignal(ruleA, ruleB, settings);
+
+      const lastCandle = candles[candles.length - 1];
+      const currentPrice = ticker?.lastPrice || lastCandle.close;
+      const change24h = ticker?.priceChangePercent || 0;
+
+      const analysis: CoinAnalysis = {
+        symbol: norm,
+        name: COIN_NAMES[norm] || formatCoinDisplayName(norm),
+        price: currentPrice,
+        change24h,
+        high24h: ticker?.highPrice || lastCandle.high,
+        low24h: ticker?.lowPrice || lastCandle.low,
+        volume24h: ticker?.volume || 0,
+        candles,
+        ruleA,
+        ruleB,
+        combinedSignal,
+        lastUpdated: Date.now(),
+      };
+
+      // Add to analyses and watchlist
+      setMarketAnalyses((prev) => ({ ...prev, [norm]: analysis }));
       setWatchlist((prev) => [...prev, norm]);
       setSelectedSymbol(norm);
+      setQuery('');
+      handleSignalDetection(analysis);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Coin not found';
+      setAddCoinError(`Could not find "${norm}" on Binance ${settings.marketType.toUpperCase()} market.`);
+      setTimeout(() => setAddCoinError(null), 4000);
+    } finally {
+      setIsAddingCoin(false);
     }
-    setQuery('');
   };
+
 
   // Remove coin from watchlist
   const handleRemoveCoin = (symbol: string, e: React.MouseEvent) => {
@@ -455,23 +513,54 @@ export default function App() {
                   <h2>Active Watchlist ({watchlist.length})</h2>
                 </div>
 
-                {/* Add Market Input */}
-                <form onSubmit={handleAddCoin} className="add-market-form">
-                  <div className="input-group">
-                    <Plus size={16} className="text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Add Coin (e.g. BTC, BOME, PEPE)"
-                      value={query}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
-                    />
-                    <span className="pair-suffix">USDT</span>
-                  </div>
-                  <button type="submit" className="add-btn">
-                    Add Coin
-                  </button>
-                </form>
+                <div className="add-market-wrap">
+                  <form onSubmit={(e) => handleAddCoin(e)} className="add-market-form">
+                    <div className="input-group">
+                      <Plus size={16} className="text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Type symbol (e.g. PEPE, SUI, NEAR)"
+                        value={query}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                        disabled={isAddingCoin}
+                      />
+                      <span className="pair-suffix">USDT</span>
+                    </div>
+                    <button type="submit" className="add-btn" disabled={isAddingCoin || !query.trim()}>
+                      {isAddingCoin ? <RefreshCw size={14} className="spin" /> : 'Add Coin'}
+                    </button>
+                  </form>
+                </div>
               </div>
+
+              {/* Error or warning banner for invalid coins */}
+              {addCoinError && (
+                <div className="add-coin-error-banner">
+                  <AlertCircle size={15} />
+                  <span>{addCoinError}</span>
+                </div>
+              )}
+
+              {/* Popular Quick Add Chips */}
+              <div className="quick-add-row">
+                <span className="quick-add-title">Quick Add:</span>
+                {['PEPEUSDT', 'SUIUSDT', 'NEARUSDT', 'AVAXUSDT', 'LINKUSDT', 'XRPUSDT', 'SHIBUSDT'].map((sym) => {
+                  const isAdded = watchlist.includes(sym);
+                  return (
+                    <button
+                      key={sym}
+                      type="button"
+                      className={`quick-chip ${isAdded ? 'added' : ''}`}
+                      disabled={isAdded || isAddingCoin}
+                      onClick={() => handleAddCoin(undefined, sym)}
+                    >
+                      {isAdded ? <Check size={12} /> : <Plus size={12} />}
+                      {formatCoinDisplayName(sym)}
+                    </button>
+                  );
+                })}
+              </div>
+
 
               {/* Watchlist Cards */}
               <div className="cards-grid">

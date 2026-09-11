@@ -407,10 +407,72 @@ body {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
-.add-btn:hover {
+.add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.add-btn:hover:not(:disabled) {
   background: #7dd3fc;
 }
+
+.add-coin-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fca5a5;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 14px;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.quick-add-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.quick-add-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quick-chip:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+.quick-chip.added {
+  opacity: 0.45;
+  cursor: default;
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
 
 /* CARDS GRID */
 .cards-grid {
