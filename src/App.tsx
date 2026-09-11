@@ -373,7 +373,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs (Desktop) */}
         <nav className={`nav-menu ${mobileMenuOpen ? 'open' : ''}`}>
           <button
             className={`nav-btn ${activeTab === 'Dashboard' ? 'active' : ''}`}
@@ -402,6 +402,33 @@ export default function App() {
           >
             <CircleHelp size={16} /> Formula & Rules
           </button>
+
+          {/* Mobile drawer quick controls */}
+          <div className="mobile-drawer-controls">
+            <div className="drawer-control-row">
+              <span>Timeframe:</span>
+              <select
+                className="timeframe-select"
+                value={settings.interval}
+                onChange={(e) => setSettings((s) => ({ ...s, interval: e.target.value as Timeframe }))}
+              >
+                <option value="1m">1m Chart</option>
+                <option value="3m">3m Chart</option>
+                <option value="5m">5m Chart</option>
+                <option value="15m">15m Chart</option>
+                <option value="1h">1h Chart</option>
+              </select>
+            </div>
+            <button
+              className="drawer-settings-btn"
+              onClick={() => {
+                setShowSettings(true);
+                setMobileMenuOpen(false);
+              }}
+            >
+              <SlidersHorizontal size={16} /> Open Rules & Settings
+            </button>
+          </div>
         </nav>
 
         {/* Global Controls & Status */}
@@ -424,19 +451,19 @@ export default function App() {
             </button>
           </div>
 
-          {/* Timeframe Selector */}
+          {/* Timeframe Selector (Hidden on small mobile, accessible in drawer) */}
           <select
-            className="timeframe-select"
+            className="timeframe-select desktop-tf-select"
             value={settings.interval}
             onChange={(e) => setSettings((s) => ({ ...s, interval: e.target.value as Timeframe }))}
           >
-            <option value="1m">1m Chart</option>
-            <option value="3m">3m Chart</option>
-            <option value="5m">5m Chart (Standard)</option>
-            <option value="15m">15m Chart</option>
-            <option value="30m">30m Chart</option>
-            <option value="1h">1h Chart</option>
-            <option value="4h">4h Chart</option>
+            <option value="1m">1m</option>
+            <option value="3m">3m</option>
+            <option value="5m">5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="4h">4h</option>
           </select>
 
           {/* Mute/Unmute */}
@@ -447,9 +474,9 @@ export default function App() {
               setSoundEnabled(next);
               if (next) playSignalSound('TEST', true);
             }}
-            title={soundEnabled ? 'Sound alerts ON (Click to mute)' : 'Sound alerts MUTED (Click to unmute)'}
+            title={soundEnabled ? 'Sound alerts ON' : 'Sound alerts MUTED'}
           >
-            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
 
           {/* Rules / Settings Drawer Trigger */}
@@ -458,17 +485,20 @@ export default function App() {
             onClick={() => setShowSettings(true)}
             title="Configure Indicator Parameters"
           >
-            <SlidersHorizontal size={17} /> Rules & Settings
+            <SlidersHorizontal size={15} />
+            <span className="settings-btn-label">Rules</span>
           </button>
 
           {/* Mobile hamburger */}
           <button
             className="mobile-menu-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
           >
-            <Menu size={20} />
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
+
       </header>
 
       {/* Main Container */}
