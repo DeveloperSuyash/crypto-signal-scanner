@@ -310,15 +310,26 @@ export default function App() {
   };
 
 
-  // Remove coin from watchlist
-  const handleRemoveCoin = (symbol: string, e: React.MouseEvent) => {
+  const [coinToDelete, setCoinToDelete] = useState<string | null>(null);
+
+  // Request coin removal (opens confirmation)
+  const requestRemoveCoin = (symbol: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setCoinToDelete(symbol);
+  };
+
+  // Confirm removal
+  const confirmRemoveCoin = () => {
+    if (!coinToDelete) return;
+    const symbol = coinToDelete;
     const updated = watchlist.filter((s) => s !== symbol);
     setWatchlist(updated);
     if (selectedSymbol === symbol && updated.length > 0) {
       setSelectedSymbol(updated[0]);
     }
+    setCoinToDelete(null);
   };
+
 
   // Export CSV
   const handleExportCSV = () => {
@@ -598,14 +609,15 @@ export default function App() {
                           {isBuy ? '🔥 BUY SIGNAL' : isSell ? '⚠️ SELL SIGNAL' : 'WATCHING'}
                         </div>
 
-                        {/* Remove */}
+                        {/* Remove with Confirmation */}
                         <button
                           className="remove-btn"
-                          onClick={(e) => handleRemoveCoin(symbol, e)}
+                          onClick={(e) => requestRemoveCoin(symbol, e)}
                           title="Remove from watchlist"
                         >
                           <X size={14} />
                         </button>
+
                       </div>
 
                       {/* Price Row */}
@@ -980,8 +992,32 @@ export default function App() {
         </div>
       )}
 
+      {/* Remove Coin Confirmation Modal */}
+      {coinToDelete && (
+        <div className="modal-backdrop" onClick={() => setCoinToDelete(null)}>
+          <div className="confirm-delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon-box">
+              <Trash2 size={24} className="text-rose-400" />
+            </div>
+            <h3>Remove Coin from Watchlist?</h3>
+            <p>
+              Are you sure you want to remove <b>{COIN_NAMES[coinToDelete] || formatCoinDisplayName(coinToDelete)} ({formatCoinDisplayName(coinToDelete)}/USDT)</b> from your active scanning watchlist?
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel-btn" onClick={() => setCoinToDelete(null)}>
+                Cancel
+              </button>
+              <button className="confirm-delete-btn" onClick={confirmRemoveCoin}>
+                <Trash2 size={16} /> Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings Modal Drawer */}
       {showSettings && (
+
         <div className="modal-backdrop" onClick={() => setShowSettings(false)}>
           <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-top">
