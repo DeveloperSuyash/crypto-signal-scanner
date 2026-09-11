@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CryptoSignal</string>
+    <string name="title_activity_main">CryptoSignal</string>
+    <string name="package_name">com.suyash.cryptosignal</string>
+    <string name="custom_url_scheme">com.suyash.cryptosignal</string>
+</resources>

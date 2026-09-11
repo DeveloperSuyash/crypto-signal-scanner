@@ -47,6 +47,7 @@ import { calculateRuleA, calculateRuleB, evaluateCombinedSignal } from './engine
 import { fetchBinanceKlines, fetchBinanceTicker24h, formatCoinDisplayName, normalizeSymbol } from './engine/binance';
 import { playSignalSound } from './engine/audio';
 import { IndicatorChart } from './components/IndicatorChart';
+import { requestNotificationPermissions, sendNativeNotification } from './engine/notifications';
 
 const DEFAULT_SETTINGS: Settings = {
   marketType: 'futures',
@@ -129,11 +130,13 @@ export default function App() {
 
   // Update seconds counter
   useEffect(() => {
+    requestNotificationPermissions();
     const timer = setInterval(() => {
       setSecondsAgo(Math.floor((Date.now() - lastRefreshTime) / 1000));
     }, 1000);
     return () => clearInterval(timer);
   }, [lastRefreshTime]);
+
 
   // Trigger sound & toast alert on state transitions
   const handleSignalDetection = useCallback(
@@ -161,12 +164,17 @@ export default function App() {
         setAlerts((prev) => [newAlert, ...prev].slice(0, 100));
         setToastAlert(newAlert);
         playSignalSound(sig, soundEnabled);
+        sendNativeNotification(
+          `${sig === 'BUY' ? '🚀 BUY' : '🔻 SELL'} Alert: ${formatCoinDisplayName(analysis.symbol)}/USDT`,
+          `Price: $${formatPrice(analysis.price)} · ${analysis.combinedSignal.ruleAStatus} · ${settings.interval}`
+        );
       } else if (sig === 'NEUTRAL' && prevSig) {
         lastEmittedSignal.current[key] = 'NEUTRAL';
       }
     },
     [settings.interval, settings.marketType, soundEnabled]
   );
+
 
   // Market Scanner Engine
   const scanAllMarkets = useCallback(async () => {
