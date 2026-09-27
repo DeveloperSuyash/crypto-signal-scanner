@@ -54,7 +54,7 @@ const DEFAULT_SETTINGS: Settings = {
   interval: '5m',
   priceSource: 'hl2',
   volatilityPeriod: 40,
-  volatilityMultiplier: 12,
+  volatilityMultiplier: 1.5,
   smoothingType: 'EMA',
   smoothingLength: 10,
   channelLength: 30,
