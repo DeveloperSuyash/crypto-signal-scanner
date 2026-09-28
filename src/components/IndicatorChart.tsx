@@ -73,6 +73,15 @@ export function IndicatorChart({ coin, settings }: IndicatorChartProps) {
     .map((val, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getYMom(val)}`)
     .join(' ');
 
+  const handlePointerMove = (clientX: number, rect: DOMRect) => {
+    const relX = clientX - rect.left;
+    const idx = Math.min(
+      displayCount - 1,
+      Math.max(0, Math.round(((relX - padX) / (rect.width - padX * 2)) * (displayCount - 1)))
+    );
+    setHoverIndex(idx);
+  };
+
   const activeIdx = hoverIndex !== null ? hoverIndex : displayCount - 1;
   const activeCandle = displayCandles[activeIdx] || displayCandles[displayCandles.length - 1];
   const activeBase = displayBase[activeIdx] || 0;
@@ -112,16 +121,17 @@ export function IndicatorChart({ coin, settings }: IndicatorChartProps) {
         <svg
           viewBox={`0 0 ${width} ${priceHeight}`}
           className="chart-svg price-svg"
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const relX = e.clientX - rect.left;
-            const idx = Math.min(
-              displayCount - 1,
-              Math.max(0, Math.round(((relX - padX) / (rect.width - padX * 2)) * (displayCount - 1)))
-            );
-            setHoverIndex(idx);
-          }}
+          onMouseMove={(e) => handlePointerMove(e.clientX, e.currentTarget.getBoundingClientRect())}
           onMouseLeave={() => setHoverIndex(null)}
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            if (touch) handlePointerMove(touch.clientX, e.currentTarget.getBoundingClientRect());
+          }}
+          onTouchMove={(e) => {
+            const touch = e.touches[0];
+            if (touch) handlePointerMove(touch.clientX, e.currentTarget.getBoundingClientRect());
+          }}
+          onTouchEnd={() => setHoverIndex(null)}
         >
           {/* Grid lines */}
           <line x1={padX} y1={priceHeight / 4} x2={width - padX} y2={priceHeight / 4} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
