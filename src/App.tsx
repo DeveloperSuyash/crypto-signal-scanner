@@ -524,20 +524,6 @@ export default function App() {
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
 
-          {/* Test Notification: fires a real OS notification ~60s later so
-              you can switch away from the app and confirm it still arrives. */}
-          <button
-            className="icon-action-btn"
-            onClick={handleTestNotification}
-            disabled={testNotifState === 'scheduled'}
-            title="Send a test notification in 60 seconds"
-          >
-            <Bell size={16} />
-            <span className="settings-btn-label">
-              {testNotifState === 'scheduled' ? 'Sent! Switch apps now' : 'Test (1 min)'}
-            </span>
-          </button>
-
           {/* Rules / Settings Drawer Trigger */}
           <button
             className="settings-trigger-btn"
@@ -1325,6 +1311,24 @@ export default function App() {
                   }
                 >
                   <span className="toggle-knob" />
+                </button>
+              </div>
+
+              {/* Test Notification: fires a real OS notification ~60s later
+                  so you can switch away from the app and confirm delivery. */}
+              <div className="settings-toggle-box">
+                <div className="toggle-left">
+                  <b>Test Notification</b>
+                  <p>Sends a real notification with sound in 60 seconds — switch to another app to verify it arrives.</p>
+                </div>
+                <button
+                  type="button"
+                  className="test-notif-btn"
+                  onClick={handleTestNotification}
+                  disabled={testNotifState === 'scheduled'}
+                >
+                  <Bell size={16} />
+                  {testNotifState === 'scheduled' ? 'Sent! Switch apps' : 'Send in 1 min'}
                 </button>
               </div>
             </div>
