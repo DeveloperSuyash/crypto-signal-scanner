@@ -135,19 +135,27 @@ export default function App() {
   // storage, so the periodic background scan (which runs outside the
   // WebView and can't read localStorage) always has up-to-date config.
   useEffect(() => {
-    BackgroundRunner.dispatchEvent({
-      label: BACKGROUND_RUNNER_LABEL,
-      event: 'syncConfig',
-      details: { watchlist, settings },
-    }).catch(() => {
-      // No-op on web/dev builds where the native plugin isn't available.
-    });
+    try {
+      BackgroundRunner.dispatchEvent({
+        label: BACKGROUND_RUNNER_LABEL,
+        event: 'syncConfig',
+        details: { watchlist, settings },
+      }).catch(() => {
+        // No-op on web/dev builds where the native plugin isn't available.
+      });
+    } catch {
+      // No-op if the native plugin call throws synchronously.
+    }
   }, [watchlist, settings]);
 
   // Update seconds counter
   useEffect(() => {
     requestNotificationPermissions();
-    BackgroundRunner.requestPermissions({ apis: ['notifications'] }).catch(() => {});
+    try {
+      BackgroundRunner.requestPermissions({ apis: ['notifications'] }).catch(() => {});
+    } catch {
+      // No-op if the native plugin call throws synchronously.
+    }
     const timer = setInterval(() => {
       setSecondsAgo(Math.floor((Date.now() - lastRefreshTime) / 1000));
     }, 1000);
