@@ -48,6 +48,9 @@ import { fetchBinanceKlines, fetchBinanceTicker24h, formatCoinDisplayName, norma
 import { playSignalSound } from './engine/audio';
 import { IndicatorChart } from './components/IndicatorChart';
 import { requestNotificationPermissions, sendNativeNotification } from './engine/notifications';
+import { BackgroundRunner } from '@capacitor/background-runner';
+
+const BACKGROUND_RUNNER_LABEL = 'com.suyash.cryptosignal.scanner';
 
 const DEFAULT_SETTINGS: Settings = {
   marketType: 'futures',
@@ -128,9 +131,23 @@ export default function App() {
     localStorage.setItem('crypto-signal-alerts', JSON.stringify(alerts));
   }, [watchlist, settings, alerts]);
 
+  // Push the current watchlist/settings into the Background Runner's own
+  // storage, so the periodic background scan (which runs outside the
+  // WebView and can't read localStorage) always has up-to-date config.
+  useEffect(() => {
+    BackgroundRunner.dispatchEvent({
+      label: BACKGROUND_RUNNER_LABEL,
+      event: 'syncConfig',
+      details: { watchlist, settings },
+    }).catch(() => {
+      // No-op on web/dev builds where the native plugin isn't available.
+    });
+  }, [watchlist, settings]);
+
   // Update seconds counter
   useEffect(() => {
     requestNotificationPermissions();
+    BackgroundRunner.requestPermissions({ apis: ['notifications'] }).catch(() => {});
     const timer = setInterval(() => {
       setSecondsAgo(Math.floor((Date.now() - lastRefreshTime) / 1000));
     }, 1000);

@@ -9,9 +9,15 @@ const config: CapacitorConfig = {
   },
   plugins: {
     LocalNotifications: {
-      smallIcon: 'ic_stat_icon_config_sample',
       iconColor: '#38BDF8',
-      sound: 'beep.wav',
+    },
+    BackgroundRunner: {
+      label: 'com.suyash.cryptosignal.scanner',
+      src: 'runners/background.js',
+      event: 'checkSignals',
+      repeat: true,
+      interval: 15,
+      autoStart: true,
     },
   },
 };
