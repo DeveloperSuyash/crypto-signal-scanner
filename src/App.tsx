@@ -47,7 +47,7 @@ import { calculateRuleA, calculateRuleB, evaluateCombinedSignal } from './engine
 import { fetchBinanceKlines, fetchBinanceTicker24h, formatCoinDisplayName, normalizeSymbol } from './engine/binance';
 import { playSignalSound } from './engine/audio';
 import { IndicatorChart } from './components/IndicatorChart';
-import { requestNotificationPermissions, sendNativeNotification } from './engine/notifications';
+import { requestNotificationPermissions, sendNativeNotification, sendTestNotification } from './engine/notifications';
 import { BackgroundRunner } from '@capacitor/background-runner';
 
 const BACKGROUND_RUNNER_LABEL = 'com.suyash.cryptosignal.scanner';
@@ -275,6 +275,18 @@ export default function App() {
 
   const [isAddingCoin, setIsAddingCoin] = useState(false);
   const [addCoinError, setAddCoinError] = useState<string | null>(null);
+
+  const [testNotifState, setTestNotifState] = useState<'idle' | 'scheduled'>('idle');
+
+  const handleTestNotification = async () => {
+    try {
+      await sendTestNotification(60);
+      setTestNotifState('scheduled');
+      setTimeout(() => setTestNotifState('idle'), 60000);
+    } catch (err) {
+      console.error('Failed to schedule test notification:', err);
+    }
+  };
 
   // Add new coin to watchlist with instant Binance verification
   const handleAddCoin = async (e?: FormEvent, coinSymbolToQuickAdd?: string) => {
@@ -510,6 +522,20 @@ export default function App() {
             title={soundEnabled ? 'Sound alerts ON' : 'Sound alerts MUTED'}
           >
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          </button>
+
+          {/* Test Notification: fires a real OS notification ~60s later so
+              you can switch away from the app and confirm it still arrives. */}
+          <button
+            className="icon-action-btn"
+            onClick={handleTestNotification}
+            disabled={testNotifState === 'scheduled'}
+            title="Send a test notification in 60 seconds"
+          >
+            <Bell size={16} />
+            <span className="settings-btn-label">
+              {testNotifState === 'scheduled' ? 'Sent! Switch apps now' : 'Test (1 min)'}
+            </span>
           </button>
 
           {/* Rules / Settings Drawer Trigger */}

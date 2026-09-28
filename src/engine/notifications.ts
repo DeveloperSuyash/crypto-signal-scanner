@@ -31,3 +31,20 @@ export async function sendNativeNotification(title: string, body: string, id: nu
     console.log('Native notification fallback (browser mode):', e);
   }
 }
+
+// Schedules a real OS notification ~1 minute from now, independent of the
+// app's foreground/background state, so the notification+sound pipeline can
+// be verified end-to-end by switching away from the app after triggering it.
+export async function sendTestNotification(delaySeconds: number = 60) {
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        title: '🔔 Test Alert: BTC/USDT',
+        body: 'This is a test notification to verify sound + delivery while the app is backgrounded.',
+        id: Math.abs(Date.now() % 2147483647),
+        schedule: { at: new Date(Date.now() + delaySeconds * 1000) },
+        extra: null,
+      },
+    ],
+  });
+}
