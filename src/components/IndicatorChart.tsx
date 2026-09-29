@@ -40,8 +40,8 @@ export function IndicatorChart({ coin, settings }: IndicatorChartProps) {
 
   // Viewport dimensions
   const width = 800;
-  const priceHeight = 220;
-  const momHeight = 90;
+  const priceHeight = 340;
+  const momHeight = 130;
   const padX = 20;
   const padY = 15;
 

@@ -653,6 +653,12 @@ body {
   border-radius: var(--radius);
   padding: 24px;
   margin-top: 24px;
+  scroll-margin-top: calc(80px + env(safe-area-inset-top, 0px));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.detail-workspace.pulse-highlight {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
 .workspace-header {
   display: flex;
@@ -976,6 +982,13 @@ body {
   padding: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
+.history-row-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.history-row-clickable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
 .time-cell {
   font-family: var(--font-mono);
   color: var(--text-muted);
@@ -1063,6 +1076,7 @@ body {
 
 /* FLOATING TOAST ALERT */
 .toast-notification {
+  cursor: pointer;
   position: fixed;
   bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   right: calc(28px + env(safe-area-inset-right, 0px));
@@ -1228,6 +1242,79 @@ body {
 }
 .confirm-delete-btn:hover {
   background: #e11d48;
+}
+
+/* SIGNAL DETAIL MODAL */
+.signal-detail-modal {
+  background: #0f172a;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  animation: fadeInScale 0.2s ease-out;
+}
+.signal-detail-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.signal-detail-badge {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.signal-detail-badge.buy {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+.signal-detail-badge.sell {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #f43f5e;
+}
+.signal-detail-reason {
+  font-size: 0.92rem;
+  color: #f8fafc;
+  font-weight: 600;
+}
+.signal-detail-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.signal-detail-rule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.rule-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.rule-value {
+  font-size: 0.82rem;
+  color: #fff;
+  font-weight: 600;
+  text-align: right;
+}
+.signal-detail-explainer {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-dim);
 }
 
 /* SETTINGS MODAL */

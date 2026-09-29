@@ -108,4 +108,5 @@ export interface AlertLog {
   marketType: MarketType;
   ruleAReason: string;
   ruleBReason: string;
+  reason: string;
 }

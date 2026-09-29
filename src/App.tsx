@@ -123,6 +123,17 @@ export default function App() {
 
   // Tracks previously notified signal state per coin to avoid repeat alert spam
   const lastEmittedSignal = useRef<Record<string, string>>({});
+  const detailWorkspaceRef = useRef<HTMLElement>(null);
+  const [detailPulse, setDetailPulse] = useState(false);
+
+  const handleSelectCoin = (symbol: string) => {
+    setSelectedSymbol(symbol);
+    detailWorkspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setDetailPulse(true);
+    setTimeout(() => setDetailPulse(false), 1200);
+  };
+
+  const [signalDetail, setSignalDetail] = useState<AlertLog | null>(null);
 
   // Sync to localStorage
   useEffect(() => {
@@ -184,6 +195,7 @@ export default function App() {
           marketType: settings.marketType,
           ruleAReason: analysis.combinedSignal.ruleAStatus,
           ruleBReason: analysis.combinedSignal.ruleBStatus,
+          reason: analysis.combinedSignal.reason,
         };
 
         setAlerts((prev) => [newAlert, ...prev].slice(0, 100));
@@ -664,7 +676,7 @@ export default function App() {
                       className={`market-card ${isSelected ? 'selected' : ''} ${
                         isBuy ? 'buy-border' : isSell ? 'sell-border' : ''
                       }`}
-                      onClick={() => setSelectedSymbol(symbol)}
+                      onClick={() => handleSelectCoin(symbol)}
                     >
                       <div className="card-top">
                         <div className="symbol-info">
@@ -739,7 +751,10 @@ export default function App() {
 
             {/* Detailed Selected Market Workspace */}
             {selectedCoinData ? (
-              <section className="detail-workspace">
+              <section
+                className={`detail-workspace ${detailPulse ? 'pulse-highlight' : ''}`}
+                ref={detailWorkspaceRef}
+              >
                 <div className="workspace-header">
                   <div className="ws-coin-info">
                     <div className="ws-title-row">
@@ -937,7 +952,11 @@ export default function App() {
                   </thead>
                   <tbody>
                     {alerts.map((item) => (
-                      <tr key={item.id}>
+                      <tr
+                        key={item.id}
+                        className="history-row-clickable"
+                        onClick={() => setSignalDetail(item)}
+                      >
                         <td className="time-cell">{item.timeStr}</td>
                         <td className="symbol-cell">
                           <b>{formatCoinDisplayName(item.symbol)}</b>
@@ -1042,7 +1061,10 @@ export default function App() {
 
       {/* Floating Toast Notification for Real-Time Signals */}
       {toastAlert && (
-        <div className={`toast-notification ${toastAlert.signal === 'BUY' ? 'toast-buy' : 'toast-sell'}`}>
+        <div
+          className={`toast-notification ${toastAlert.signal === 'BUY' ? 'toast-buy' : 'toast-sell'}`}
+          onClick={() => setSignalDetail(toastAlert)}
+        >
           <div className="toast-icon">
             {toastAlert.signal === 'BUY' ? <TrendingUp size={22} /> : <TrendingDown size={22} />}
           </div>
@@ -1058,12 +1080,74 @@ export default function App() {
               <b>${formatPrice(toastAlert.price)}</b>
             </div>
             <small className="toast-sub">
-              {toastAlert.ruleAReason} · {toastAlert.timeframe}
+              {toastAlert.ruleAReason} · {toastAlert.timeframe} · Tap for details
             </small>
           </div>
-          <button className="toast-close" onClick={() => setToastAlert(null)}>
+          <button
+            className="toast-close"
+            onClick={(e) => {
+              e.stopPropagation();
+              setToastAlert(null);
+            }}
+          >
             <X size={16} />
           </button>
+        </div>
+      )}
+
+      {/* Signal Explanation Modal: what exactly triggered this BUY/SELL */}
+      {signalDetail && (
+        <div className="modal-backdrop" onClick={() => setSignalDetail(null)}>
+          <div className="signal-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-top">
+              <div className="modal-title">
+                {signalDetail.signal === 'BUY' ? (
+                  <TrendingUp size={20} className="text-emerald-400" />
+                ) : (
+                  <TrendingDown size={20} className="text-rose-400" />
+                )}
+                <div>
+                  <h3>
+                    {signalDetail.signal === 'BUY' ? 'BUY' : 'SELL'} Signal —{' '}
+                    {formatCoinDisplayName(signalDetail.symbol)}/USDT
+                  </h3>
+                  <p>{signalDetail.timeStr} · {signalDetail.timeframe} · {signalDetail.marketType.toUpperCase()}</p>
+                </div>
+              </div>
+              <button className="modal-close" onClick={() => setSignalDetail(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="signal-detail-body">
+              <div className={`signal-detail-badge ${signalDetail.signal === 'BUY' ? 'buy' : 'sell'}`}>
+                {signalDetail.signal === 'BUY' ? '🚀 BUY at' : '🔻 SELL at'} ${formatPrice(signalDetail.price)}
+              </div>
+
+              <p className="signal-detail-reason">{signalDetail.reason}</p>
+
+              <div className="signal-detail-rules">
+                <div className="signal-detail-rule">
+                  <span className="rule-label">
+                    <TrendingUp size={14} /> Rule A — Trend
+                  </span>
+                  <span className="rule-value">{signalDetail.ruleAReason}</span>
+                </div>
+                <div className="signal-detail-rule">
+                  <span className="rule-label">
+                    <Gauge size={14} /> Rule B — Momentum
+                  </span>
+                  <span className="rule-value">{signalDetail.ruleBReason}</span>
+                </div>
+              </div>
+
+              <p className="signal-detail-explainer">
+                {signalDetail.signal === 'BUY'
+                  ? 'A BUY fires when the trend envelope (Rule A) flips upward while the momentum oscillator (Rule B) was oversold or is rebounding out of oversold — both conditions lined up within the confluence window.'
+                  : 'A SELL fires when the trend envelope (Rule A) flips downward while the momentum oscillator (Rule B) was overbought or is falling out of overbought — both conditions lined up within the confluence window.'}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
